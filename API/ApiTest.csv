@@ -1,0 +1,425 @@
+TEST CASE - Verify database table
+Description:
+overenie struktury  DB tabulky 'Student"
+databaze: qa_demo
+host: aws.connect.psdb.cloud
+userName: i84vadv7fflhyhbagctk
+password: pscale_pw_j82wJU4Hp0uLgF29FuatMj8dYSrrvzpIBtiJRQ8yshQ
+
+Step case:
+1) otvorime zoznam tabulike pomocou  prikazu "SHOW TABLES"
+2) overime strukturu tabulky pomocou prikazu "Describe student"
+
+3) Expected result:
+zobrazia sa vsetky tabulky a tabulka "student"
+tabulka obsahuje pozadovane columnns a datove typy: id (bigInt), age (int), email (text), first_name (text), last_name (text),
+
+Actual result:
+Zobrazila sa tabulka  "student"
+Tabulka obsahuje údaje podla datových typov a požadovaných collumns
+
+Test: Pass
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+TEST CASES - metoda GET
+
+Valid ID
+----------------
+Precondition:
+Nastroj: Postman
+URL: http://database.stedro.com:8080/api/v1/students/, ID studenta 176
+
+Test data prep:
+id = 176
+first_name: john
+last_name: JOSHUA
+email: jjohn34@yourmail.com
+age: 34
+
+Test case:
+
+- Odosleme GET http://database.stedro.com:8080/api/v1/students/176
+
+Expected result:
+
+status code: 200 OK
+"response JSON: ""{
+    """"id"""": 176,
+    """"firstName"""":john;
+    """"lastName"""": JOSHUA;
+    """"email"""": jjohn34@yourmail.com;
+    """"age"""": 34;
+}"""
+
+Actual result:
+Status code: 200 OK
+Skontrolovane udaje z tabulky ci sedia s Expected result - Vsetko sedi, test presiel.
+
+Invalid ID - non exist student
+---------------------------------
+Precondition:
+Nastroj: Postman
+URL: http://database.stedro.com:8080/api/v1/students/, ID studenta 50
+
+Step case:
+
+-Odešleme GET http://database.stedro.com:8080/api/v1/students/50
+
+Expected result:
+
+status code: 404 not found
+
+Actual result:
+status code: 500
+response JSON:
+"{
+    ""timestamp"": ""2024-04-16T15:56:07.342+00:00"",
+    ""status"": 500,
+    ""error"": ""Internal Server Error"",
+    ""message"": """",
+    ""path"": ""/api/v1/students/50""
+}
+"
+FAILED
+
+Functional test - other case then valid ID
+------------------------------------------
+Precondition:
+Nastroj: Postman
+URL: http://database.stedro.com:8080/api/v1/students/John
+Test data prep:
+id=John
+
+Step case:
+-Odošleme GET http://database.stedro.com:8080/api/v1/students/John
+
+Expected result:
+-status code: 400 bad request
+
+Actual result:
+status code: 400
+response JSON:
+"{
+    ""timestamp"": ""2024-04-16T16:08:18.731+00:00"",
+    ""status"": 400,
+    ""error"": ""Bad Request"",
+    ""message"": """",
+    ""path"": ""/api/v1/students/John""
+}"
+PASS
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+All data isn't filled in
+
+Precondition:
+Postman, URL: http://database.stedro.com:8080/api/v1/students/305
+Test data prep:
+id=305
+first_name= ;
+last_name: ;
+email: ;
+age=37
+
+Step case:
+
+- Odošleme GET http://database.stedro.com:8080/api/v1/students/305
+
+Expected result:
+status code: 200 OK
+response JSON:
+" ""{
+    """"id"""": 305,
+    """"firstName"""": ;
+    """"lastName"""": ;
+    """"email"""": ;
+    """"age"""": 37;
+}"""
+
+Actual result:
+status code: 200
+response JSON:
+"{
+    ""id"": 305,
+    ""firstName"": """",
+    ""lastName"": """",
+    ""email"": """",
+    ""age"": 37
+}"
+
+PASS
+-----------------------------------------------------------------------------
+Invalid ID- non exist student - BUG REPORT:
+Browser:  Chrome 123.xx.xx.xx +
+Platform: Postman 10.24.22
+Reported Date: 16/4/2024
+OS: Windows 10
+URL : http://database.stedro.com:8080/api/v1/students/50
+Priority
+Description
+Steps to reproduce
+Send GET method http://database.stedro.com:8080/api/v1/students/50
+
+Expected result: HTTP status code 404
+Actual result: HTTP status code 500
+
+-------------------------------------------------------
+Test case - metoda DELETE
+Zmazanie existujuceho studenta
+
+Precondition:
+Postman, URL:  http://database.stedro.com:8080/api/v1/students/374
+Test data prep:
+" ""{
+    """"id"""": 374;
+    """"firstName"""": petra;
+    """"lastName"""": SOVOVÁ2;
+    """"email"""": petrA@sova.cz;
+    """"age"""": 18;
+}"""
+
+Step case:
+-Odošleme DELETE http://database.stedro.com:8080/api/v1/students/374
+
+Expected result:
+Status code: 200 OK
+Preverenie v MySQL  "SELECT * FROM qa_demo.student where id=374;" ID studenta , ci naozaj neexistuju udaje o studentovi.
+
+Actual result:
+Status Code: 200
+ MySQL  "SELECT * FROM qa_demo.student where id=374;" ID studenta
+
+ PASS
+
+----------------------------------------------------------------------------
+Neúspěšné smazánie - neexistujuce ID
+
+Precondition:
+Postman, URL:  http://database.stedro.com:8080/api/v1/students/381
+Test data prep:
+""id"": 381;
+
+Step case:
+Odošleme DELETE http://database.stedro.com:8080/api/v1/students/381
+
+Expected result:
+Status code: 404 not found
+
+Actual result:
+Status code: 500
+Response JSON:
+"{
+    ""timestamp"": ""2024-04-18T15:49:17.731+00:00"",
+    ""status"": 500,
+    ""error"": ""Internal Server Error"",
+    ""message"": """",
+    ""path"": ""/api/v1/students/381""
+}"
+
+FAIL
+
+Non-existent ID - DELETE method - BUG REPORT:
+Browser:  Chrome 123.xx.xx.xx +
+Platform: Postman 10.24.22
+Reported date: 18/4/2024
+OS: Windows 10
+http://database.stedro.com:8080/api/v1/students/381
+Priority
+medium
+Steps to reproduce
+Send metoda DELETE
+ http://database.stedro.com:8080/api/v1/students/381
+Expected result: HTTP status code 404 not found
+Actual result: HTTP status code 500 internal server error
+
+Without ID - DELETE method - BUG REPORT:
+Browser:  Chrome 123.xx.xx.xx +
+Platform: Postman 10.24.22
+Reported date: 18/4/2024
+OS: Windows 10
+http://database.stedro.com:8080/api/v1/students/
+Priority: Medium
+
+Steps to reproduce
+Send metoda DELETE http://database.stedro.com:8080/api/v1/students/
+
+Expected result: HTTP status code 400 - Bad Request
+Actual result: HTTP status code 405 - Method Not Allowed
+--------------------------------------------------------------------------------------------------------------------------
+RE-TEST and REGRESS testing - metoda GET
+Happy passing (validný ID)
+Precondition:
+Postman
+URL: http://database.stedro.com:8080/api/v1/students/, ID studenta 396
+Test data prep:
+id = 396
+first_name: Tef
+last_name: TESTSDF
+email: jjohn34@yourmail.com
+age: 34
+
+Test case:
+
+- Odošleme GET http://database.stedro.com:8080/api/v1/students/396
+
+Expected result:
+
+status code: 200 OK
+"response JSON: ""{
+    """"id"""": 396,
+    """"firstName"""":Tef;
+    """"lastName"""": TESTSDF;
+    """"email"""": jjohn34@yourmail.com;
+    """"age"""": 34;
+}"""
+
+Actual result:
+status code: 200 OK
+repsonse JSON:
+"{
+    ""id"": 396,
+    ""firstName"": ""Tef"",
+    ""lastName"": ""TESTSDF"",
+    ""email"": ""jjohn34@yourmail.com"",
+    ""age"": 34
+}"
+
+PASS
+
+Fail Test (nevalidné ID)
+------------------------------
+Precondition:
+Postman
+URL: http://database.stedro.com:8080/api/v1/students/, ID studenta 50
+
+Step case:
+
+-Odošleme GET http://database.stedro.com:8080/api/v1/students/50
+
+Expected result:
+
+status code: 404 not found
+
+Actual result:
+status code: 500 internal sever error
+response JSON:
+"{
+    ""timestamp"": ""2024-04-18T17:03:40.544+00:00"",
+    ""status"": 500,
+    ""error"": ""Internal Server Error"",
+    ""message"": """",
+    ""path"": ""/api/v1/students/50""
+}"
+FAILED
+
+Bezpečnostní test (ine dotaz než platné ID)
+
+Precondition:
+Postman
+URL: http://database.stedro.com:8080/api/v1/students/John
+Test data prep:
+id=John
+
+Step case:
+-Odošleme GET http://database.stedro.com:8080/api/v1/students/John
+
+Expected result:
+status code: 400 bad request
+
+Actual result:
+status code: 400 bad request
+
+response JSON:
+"{
+    ""timestamp"": ""2024-04-18T16:57:05.076+00:00"",
+    ""status"": 400,
+    ""error"": ""Bad Request"",
+    ""message"": """",
+    ""path"": ""/api/v1/students/John""
+}"
+
+PASS
+
+Nie su vyplnené všetky údaje
+----------------------------------------
+Precondition:
+Postman, URL: http://database.stedro.com:8080/api/v1/students/305
+Test data prep:
+id=305
+first_name= ;
+last_name: ;
+email: ;
+age=37
+
+Step case:
+
+1) Odošleme GET http://database.stedro.com:8080/api/v1/students/305
+
+2) Expected result:
+status code: 200 OK
+response JSON:
+" ""{
+    """"id"""": 305,
+    """"firstName"""": ;
+    """"lastName"""": ;
+    """"email"""": ;
+    """"age"""": 37;
+}"""
+
+Actual result:
+Status code: 200
+response JSON:
+" ""{
+    """"id"""": 305,
+    """"firstName"""": ;
+    """"lastName"""": ;
+    """"email"""": ;
+    """"age"""": 37;
+}"""
+
+PASS
+
+Nie je zvolený student - bez ID
+---------------------------------------
+Precondition:
+Postman, URL: http://database.stedro.com:8080/api/v1/students/
+Test data prep:
+ÏD=null
+
+Step case:
+
+-Odošleme GET http://database.stedro.com:8080/api/v1/students/
+
+Expected result:
+Status code: 400 - bad request
+
+Actual result:
+Status code: 200
+JSON: zobrazí seznam všech studentů včetně jejich údajů
+FAIL
+
+Invalid ID GET method - BUG REPORT:
+Browser:  Chrome 123.xx.xx.xx +
+Platform: Postman 10.24.22
+Reported Date: 18/4/2024
+OS: Windows 10,
+URL : http://database.stedro.com:8080/api/v1/students/50
+Priority
+Description
+Steps to reproduce
+Send GET method http://database.stedro.com:8080/api/v1/students/50
+
+Expected result: HTTP status code 404
+Actual result: HTTP status code 500 - Internal server error
+
+Without ID GET method - BUG REPORT:
+Browser:  Chrome 123.xx.xx.xx +
+Platform: Postman 10.24.22
+Reported Date: 18/4/2024
+OS: Windows 10
+URL : http://database.stedro.com:8080/api/v1/students/
+Priority
+Description
+Steps to reproduce
+Send GET method http://database.stedro.com:8080/api/v1/students/
+
+Expected result: HTTP status code 400 - bad request
+Actual result: HTTP status code 200 - OK
